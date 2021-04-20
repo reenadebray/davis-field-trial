@@ -36,6 +36,8 @@ ag_seqtab.nochim <- removeBimeraDenovo(ag_seqtab, method="consensus", multithrea
 # We used the Silva taxonomic training dataset located at https://zenodo.org/record/1172783#.YH9ESRNKiL8
 # Initialize "training_set" variable as the path to the fasta file
 ag_taxa <- assignTaxonomy(ag_seqtab.nochim, training_set, multithread=TRUE)
+ag_taxa.print <- ag_taxa 
+rownames(ag_taxa.print) <- NULL
 
 # Make ASV table
 ag_asv_seqs <- colnames(ag_seqtab.nochim)
@@ -44,12 +46,11 @@ ag_asv_seqs <- colnames(ag_seqtab.nochim)
  ag_asv_headers[i] <- paste(">ASV", i, sep="_")
  }
 ag_asv_tab <- t(ag_seqtab.nochim)
-row.names(ag_asv_tab) <- sub(">", "", ag_asv_headers)
-write.table(ag_asv_tab, "ASVs_counts.tsv", sep="\t", quote=F, col.names=NA)
 
 # Create phyloseq item (using a metadata file called "ag_sample_info")
+row.names(ag_asv_tab) <- sub(">", "", ag_asv_headers)
+row.names(ag_taxa.print) <- sub(">", "", ag_asv_headers)
 ag_OTU = otu_table(ag_asv_tab, taxa_are_rows = TRUE)
 ag_TAX = tax_table(ag_taxa)
 ag_samples = ag_sample_info
-
 ag_ps <-phyloseq(ag_OTU, ag_TAX, ag_samples)

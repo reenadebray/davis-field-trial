@@ -7,6 +7,7 @@ library(dada2)
 library(ShortRead)
 library(Biostrings)
 library(phyloseq)
+library(stringr)
 
 # Initialize "path" variable as directory containing fastq files
 fnFs <- sort(list.files(path, pattern = "_R1_001.fastq.gz", full.names = TRUE))
@@ -60,3 +61,16 @@ TAX = tax_table(taxa.print)
 samples = sample_info_ps
 ps <-phyloseq(OTU, TAX, samples)
 
+# Identify non-fungal eukaryotic sequences using the program ITSx (see instructions in ITSx_sequence_filtering file)
+# load ITSx output as "ITSx_output"
+# Remove ASVs unclassified at the phylum level that ITSx did not identify as fungi
+ps_phylumNA <- subset_taxa(ps, is.na(Phylum))
+NA_ASV_names <- rownames(tax_table(ps_phylumNA))
+NA_ASV_numbers <- as.numeric(str_remove(NA_ASV_names, "ASV_"))
+NA_ASV_numbers <- as.vector(NA_ASV_numbers)
+ITSx_fungal <- subset(ITSx_output, V3 == "F")
+ITSx_fungal_numbers <- as.numeric(ITSx_fungal$V1)
+nonfungalASVs_ITSx <- NA_ASV_numbers[! NA_ASV_numbers %in% ITSx_fungal_numbers]
+nonfungalASVs_ITSx <- paste("ASV_", nonfungalASVs_ITSx, sep="")
+fungalTaxa <- setdiff(taxa_names(ps), nonfungalASVs_ITSx)
+ps_noNA_ITSx = prune_taxa(fungalTaxa, ps)

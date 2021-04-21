@@ -9,6 +9,8 @@ Water and nutrient limitation are key stressors that affect plant health and eco
 Support for this work was provided by the Army Research Office (W911NF-17-1-0231 to AG), the National Science Foundation (NSF Graduate Research Fellowships to RD, CH, AG), the University of California, Berkeley (Berkeley Fellowships to YS, CH), the Society for the Study of Evolution (Grant 047408 to RD), the Hellman Fellows Fund (Hellman Fellows Award to BK) and the Marian E. Koshland Integrated Natural Sciences Center (KINSC Summer Scholarship to GK).
 
 ## This repository includes:
+### Functions.R
+Contains all functions written for the analysis.
 ### 16S_sequence_processing.R
 Implementation of DADA2 pipeline and removal of plant chloroplast and mitochondrial sequences.
 ### ITS_sequence_processing.R

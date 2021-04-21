@@ -61,13 +61,15 @@ TAX = tax_table(taxa.print)
 samples = sample_info_ps
 ps <-phyloseq(OTU, TAX, samples)
 
-# Identify non-fungal eukaryotic sequences using the program ITSx (see instructions in ITSx_sequence_filtering file)
-# load ITSx output as "ITSx_output"
-# Remove ASVs unclassified at the phylum level that ITSx did not identify as fungi
+# Identify ASVs that are unclassified at the phylum level
 ps_phylumNA <- subset_taxa(ps, is.na(Phylum))
 NA_ASV_names <- rownames(tax_table(ps_phylumNA))
 NA_ASV_numbers <- as.numeric(str_remove(NA_ASV_names, "ASV_"))
 NA_ASV_numbers <- as.vector(NA_ASV_numbers)
+
+# Identify non-fungal eukaryotic sequences using the program ITSx (see instructions in ITSx_sequence_filtering file)
+# load ITSx output as "ITSx_output"
+# Remove ASVs unclassified at the phylum level that ITSx did not identify as fungi
 ITSx_fungal <- subset(ITSx_output, V3 == "F")
 ITSx_fungal_numbers <- as.numeric(ITSx_fungal$V1)
 nonfungalASVs_ITSx <- NA_ASV_numbers[! NA_ASV_numbers %in% ITSx_fungal_numbers]

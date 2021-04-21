@@ -1,6 +1,6 @@
 ## Method for identifying fungal from non-fungal sequences in ITS amplicon datasets
-## Catherine A. Hernandez
-## January 2021
+### Catherine A. Hernandez
+### January 2021
 
 After processing sequencing results and generating a phyloseq object in R, many ASVs were classified as Kingdom “Fungi” but had no Phylum (or lower) assignment. 
 I extracted the sequences of these ASVs and BLASTed them – many matched to plants or algae, but some may be unclassified fungi. 

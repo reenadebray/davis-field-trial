@@ -4,8 +4,12 @@
 
 # Load packages
 library(phyloseq)
-library(ggplot2)
-library(gridExtra)
+library(vegan)
+library(indicspecies)
+library(igraph)
+library(Hmisc)
+
+### Bacterial alpha and beta diversity
 
 # Subset bacterial phyloseq object to field samples
 ag_ps_field<-subset_samples(ag_ps_nocontam_allsamp,Group=="Field")
@@ -36,6 +40,8 @@ medP_names<-rownames(ag_ps_rmnosamp@sam_data[ag_ps_rmnosamp@sam_data$Phosphorous
 lowP_names<-rownames(ag_ps_rmnosamp@sam_data[ag_ps_rmnosamp@sam_data$Phosphorous.Level==1,])
 P_dispersion_analysis<-get_pairwise_dist(dist_bray,list(highP_names,medP_names,lowP_names),c("high","medium","low"))
 
+### Fungal alpha and beta diversity
+
 # Subset fungal phyloseq object to field samples
 ps_field_noNA <- subset_samples(ps_noNA_ITSx_nocontam, Group=="Field")
 # Remove taxa that do not occur in any of the field samples
@@ -64,66 +70,26 @@ medP_names<-rownames(ps_field_noNA@sam_data[ps_field_noNA@sam_data$Phosphorous.L
 lowP_names<-rownames(ps_field_noNA@sam_data[ps_field_noNA@sam_data$Phosphorous.Level==1,])
 P_dispersion_ITS_analysis<-get_pairwise_dist(dist_bray_ITS,list(highP_names,medP_names,lowP_names),c("High","Medium","Low"))
 
-### Figure 1: effects of drought on bacterial and fungal diversity
+### Indicator species analysis
 
-# Figure 1A: drought & bacterial richness 
-ag_ps_rmnosamp@sam_data[ag_ps_rmnosamp@sam_data$Water.Regiment=="drought","water2"]="50% deficit"
-ag_ps_rmnosamp@sam_data[ag_ps_rmnosamp@sam_data$Water.Regiment=="full water","water2"]="Full water"
-ag_ps_rmnosamp@sam_data$water2<-factor(ag_ps_rmnosamp@sam_data$water2,levels=c("Full water","50% deficit"))
-ggplot(ag_ps_rmnosamp@sam_data,aes(water2,observed))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Observed bacterial richness")
+# Indicator species analysis for water regime on wild-type background
+abund<-t(subset_samples(ag_ps_rmnosamp,Genotype=="76R")@otu_table)
+water<-subset_samples(ag_ps_rmnosamp,Genotype=="76R")@sam_data$Water.Regiment
+inv_water = as.matrix(multipatt(abund,water,func="IndVal.g",control = how(nperm=999)))[,1]$sign
 
-# Figure 1B: drought & fungal richness
-ps_field_noNA@sam_data[ps_field_noNA@sam_data$Water.Regiment=="drought","water2"]="50% deficit"
-ps_field_noNA@sam_data[ps_field_noNA@sam_data$Water.Regiment=="full water","water2"]="Full water"
-ps_field_noNA@sam_data$water2<-factor(ps_field_noNA@sam_data$water2,levels=c("Full water","50% deficit"))
-ggplot(ps_field_noNA@sam_data,aes(water2,observed))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Observed fungal richness")
+# Indicator species analysis for genotype on full-water background
+abund<-t(subset_samples(ag_ps_rmnosamp,Water.Regiment=="full water")@otu_table)
+genotype<-subset_samples(ag_ps_rmnosamp,Water.Regiment=="full water")@sam_data$Genotype
+inv_genotype = as.matrix(multipatt(abund,genotype,func="IndVal.g",control = how(nperm=999)))[,1]$sign
 
-# Figure 1C: drought & bacterial shannon diversity
-ggplot(ag_ps_rmnosamp@sam_data,aes(water2,shannon))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Bacterial diversity (Shannon index)")
-
-# Figure 1D: drought & fungal shannon diversity
-ggplot(ps_field_noNA@sam_data,aes(water2,shannon))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Bacterial diversity (Shannon index)")
-
-# Figure 1E: bacterial beta diversity within drought treatments
-drought_dispersion_analysis[drought_dispersion_analysis$Water.Regiment=="drought","water2"]="50% deficit"
-drought_dispersion_analysis[drought_dispersion_analysis$Water.Regiment=="full water","water2"]="Full water"
-drought_dispersion_analysis$water2<-factor(drought_dispersion_analysis$water2,levels=c("Full water","50% deficit"))
-ggplot(drought_dispersion_analysis,aes(water2,avg_BC))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Bacterial beta diversity within group")
-
-# Figure 1F: fungal beta diversity within drought treatments
-drought_dispersion_ITS_analysis[drought_dispersion_ITS_analysis$Water.Regiment=="drought","water2"]="50% deficit"
-drought_dispersion_ITS_analysis[drought_dispersion_ITS_analysis$Water.Regiment=="full water","water2"]="Full water"
-drought_dispersion_ITS_analysis$water2<-factor(drought_dispersion_ITS_analysis$water2,levels=c("Full water","50% deficit"))
-ggplot(drought_dispersion_ITS_analysis,aes(water2,avg_BC))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Fungal beta diversity within group")
-
-### Figure 2: effects of plant genotype on bacterial and fungal diversity
-
-# Figure 2A: genotype & bacterial richness
-ag_ps_rmnosamp@sam_data[ag_ps_rmnosamp@sam_data$Genotype=="76R","genotype2"]="Wild-type 76R"
-ag_ps_rmnosamp@sam_data[ag_ps_rmnosamp@sam_data$Genotype=="rmc","genotype2"]="Reduced\nmycorrhizal"
-ag_ps_rmnosamp@sam_data$genotype2<-factor(ag_ps_rmnosamp@sam_data$genotype2,levels=c("Wild-type 76R","Reduced\nmycorrhizal"))
-ggplot(ag_ps_rmnosamp@sam_data,aes(genotype2,observed))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Observed bacterial richness")
-
-# Figure 2B: genotype & fungal richness
-ps_field_noNA@sam_data[ps_field_noNA@sam_data$Genotype=="76R","genotype2"]="Wild-type 76R"
-ps_field_noNA@sam_data[ps_field_noNA@sam_data$Genotype=="rmc","genotype2"]="Reduced\nmycorrhizal"
-ps_field_noNA@sam_data$genotype2<-factor(ps_field_noNA@sam_data$genotype2,levels=c("Wild-type 76R","Reduced\nmycorrhizal"))
-ggplot(ps_field_noNA@sam_data,aes(genotype2,observed))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Observed fungal richness")
-
-# Figure 2C: genotype & bacterial shannon diversity
-ggplot(ag_ps_rmnosamp,aes(genotype2,shannon))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Bacterial diversity (Shannon index)")
-
-# Figure 2D: genotype & fungal shannon diversity
-ggplot(ps_field_noNA,aes(genotype2,shannon))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Fungal diversity (Shannon index)")
-
-# Figure 2E: bacterial beta diversity within genotypes
-genotype_dispersion_analysis[genotype_dispersion_analysis$Genotype=="76R","genotype2"]="Wild-type 76R"
-genotype_dispersion_analysis[genotype_dispersion_analysis$Genotype=="rmc","genotype2"]="Reduced\nmycorrhizal"
-genotype_dispersion_analysis$genotype2<-factor(genotype_dispersion_analysis$genotype2,levels=c("Wild-type 76R","Reduced\nmycorrhizal"))
-ggplot(genotype_dispersion_analysis,aes(genotype2,avg_BC))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Bacterial beta diversity within group")
-
-# Figure 2F: fungal beta diversity within genotypes
-genotype_dispersion_ITS_analysis[genotype_dispersion_ITS_analysis$Genotype=="76R","genotype2"]="Wild-type 76R"
-genotype_dispersion_ITS_analysis[genotype_dispersion_ITS_analysis$Genotype=="rmc","genotype2"]="Reduced\nmycorrhizal"
-genotype_dispersion_ITS_analysis$genotype2<-factor(genotype_dispersion_ITS_analysis$genotype2,levels=c("Wild-type 76R","Reduced\nmycorrhizal"))
-ggplot(genotype_dispersion_ITS_analysis,aes(genotype2,avg_BC))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=2,alpha=0.8)+theme_classic(base_size=24)+guides(color=F)+xlab("")+ylab("Fungal beta diversity within group")
+# Identify ASVs that were significant hits for either water regime or genotype (or both)
+all_indic<-unique(c(rownames(inv_water[inv_water$p.value<0.05 & !is.na(inv_water$p.value),]),rownames(inv_genotype[inv_genotype$p.value<0.05 & !is.na(inv_genotype$p.value),])))
+water_sig<-inv_water[all_indic,]
+genotype_sig<-inv_genotype[all_indic,]
+colnames(water_sig)=c("Var1","Var2","index","stat","pval")
+water_sig$ASV<-rownames(water_sig)
+water_sig$treatment<-rep("water",nrow(water_sig))
+colnames(genotype_sig)=c("Var1","Var2","index","stat","pval") 
+genotype_sig$ASV<-rownames(genotype_sig)
+genotype_sig$treatment<-rep("genotype",nrow(genotype_sig))
+indic_asvs<-rbind(water_sig,genotype_sig)

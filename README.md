@@ -12,7 +12,9 @@ Support for this work was provided by the Army Research Office (W911NF-17-1-0231
 ### 16S_sequence_processing.R
 Implementation of DADA2 pipeline and removal of plant chloroplast and mitochondrial sequences.
 ### ITS_sequence_processing.R
-Implementation of DADA2 ITS pipeline and removal of non-fungal eukaryotic sequences with ITSx.
+Implementation of DADA2 ITS pipeline and removal of non-fungal eukaryotic sequences.
+### ITS_sequence_filtering.md
+Describes how to use ITSx to classify ITS sequences as fungal or non-fungal.
 ### Field_trial_analysis.R
 All code used to generate figures describing microbiome composition in the field trial (Figures 1-4, S5-S9, S13).
 ### Growth_chamber_experiments.R

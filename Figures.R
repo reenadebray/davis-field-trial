@@ -154,9 +154,7 @@ nw_sums[nw_sums$treatment=="drought 76R","treatment2"]="Wild-type 76R\nWater def
 nw_sums[nw_sums$treatment=="drought rmc","treatment2"]="Reduced mycorrhizal\nWater deficit"
 nw_sums[nw_sums$treatment=="full water 76R","treatment2"]="Wild-type 76R\nFull water"
 nw_sums[nw_sums$treatment=="full water rmc","treatment2"]="Reduced mycorrhizal\nFull water"
-
 nw_sums$treatment2<-factor(nw_sums$treatment2,levels=rev(c("Wild-type 76R\nFull water","Reduced mycorrhizal\nFull water","Wild-type 76R\nWater deficit","Reduced mycorrhizal\nWater deficit")))
-
 ggplot(nw_sums)+geom_point(aes(num_edges,treatment2),size=4,shape=23,fill="black")+theme_classic(base_size=24)+geom_point(aes(bac_edges,treatment2),fill="blue",size=4,shape=23)+geom_point(aes(fun_edges,treatment2),fill="gold",size=4,shape=23)+geom_point(aes(BF_edges,treatment2),fill="forestgreen",size=4,shape=23)+xlab("Number of network edges")+ylab("")
 
 # Figure 4D: Network node metrics
@@ -164,7 +162,37 @@ node_sums[node_sums$treatment=="drought 76R","treatment2"]="Wild-type 76R\nWater
 node_sums[node_sums$treatment=="drought rmc","treatment2"]="Reduced mycorrhizal\nWater deficit"
 node_sums[node_sums$treatment=="full water 76R","treatment2"]="Wild-type 76R\nFull water"
 node_sums[node_sums$treatment=="full water rmc","treatment2"]="Reduced mycorrhizal\nFull water"
-
 node_sums$treatment2<-factor(node_sums$treatment2,levels=rev(c("Wild-type 76R\nFull water","Reduced mycorrhizal\nFull water","Wild-type 76R\nWater deficit","Reduced mycorrhizal\nWater deficit")))
-
 ggplot(node_sums,aes(log(degree_norm),treatment2))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(height=0.05,width=0.1,size=2,alpha=0.2)+theme_classic(base_size=24)+ylab("")+xlab("Log-scaled normalized degree")+xlim(-7,0)
+
+### Figure 5: Changes in diversity and composition from field to growth chamber
+
+# Figure 5A: Diversity loss from field to genotype experiment
+field_G@sam_data[field_G@sam_data$Inoculum=="G inoculum","inoc2"]="Inocula for\nmycorrhizae experiment"
+field_G@sam_data[field_G@sam_data$Inoculum=="G sample","inoc2"]="Samples from\nmycorrhizae experiment"
+ggplot(field_G@sam_data,aes(reorder(inoc2,-observed),observed,color=reorder(Inoculum,-observed)))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(size=3,width=0.05,alpha=0.8)+theme_classic(base_size=24)+xlab("")+ylab("Observed bacterial richness")+scale_color_manual(values=inferno(4)[2:3])+guides(color=F)
+
+# Figure 5B: Diversity loss from field to phosphorus experiment
+field_P@sam_data[field_P@sam_data$Inoculum=="P inoculum","inoc2"]="Inocula for\nphosphorus experiment"
+field_P@sam_data[field_P@sam_data$Inoculum=="P sample","inoc2"]="Samples from\nphosphorus experiment"
+ggplot(tmp,aes(reorder(inoc2,-observed),observed,color=reorder(Inoculum,-observed)))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(size=3,width=0.05,alpha=0.8,shape=17)+theme_classic(base_size=24)+xlab("")+ylab("Observed bacterial richness")+scale_color_manual(values=inferno(4)[2:3])+guides(color=F)
+
+# Figure 5C: Compositional changes from field to growth chamber
+field_GP@sam_data[field_GP@sam_data$Inoculum=="G inoculum","inoc2"]="Inocula for mycorrhizae experiment"
+field_GP@sam_data[field_GP@sam_data$Inoculum=="G sample","inoc2"]="Samples from mycorrhizae experiment"
+field_GP@sam_data[field_GP@sam_data$Inoculum=="P inoculum","inoc2"]="Inocula for phosphorus experiment"
+field_GP@sam_data[field_GP@sam_data$Inoculum=="P sample","inoc2"]="Samples from phosphorus experiment"
+set.seed(123)
+plot_ordination(field_GP,ordinate(field_GP,"NMDS",distance = "bray"),type="samples")+geom_point(size=2.5,aes(color=inoc2,shape=inoc2))+theme_classic(base_size=24)+stat_ellipse(aes(color=inoc2),size=1)+scale_color_manual(values=rep(inferno(4)[2:3],each=2))+scale_shape_manual(values=c(16,17,16,17))+guides(shape=F)+theme(legend.key.size = unit(1.5, 'cm'))
+
+# Figure 5D: Inoculum to sample distance (genotype experiment)
+tmp<-genotype_exp_beta[genotype_exp_beta$class!="samples",]
+tmp[tmp$class=="same_genotype","class2"]=c("Same genotype\nas field")
+tmp[tmp$class=="different_genotype","class2"]=c("Different genotype\nfrom field")
+ggplot(tmp,aes(class2,beta_bray))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=3,alpha=0.8)+theme_classic(base_size=22)+guides(color=F)+xlab("")+ylab("Bray-Curtis dissimilarity\nfrom inoculum to sample")
+
+#Figure 5E: Inoculum to sample distance (phosphorus experiment)
+tmp<-phosphorous_exp_beta[phosphorous_exp_beta$class!="samples",]
+tmp[tmp$class=="same_phosphorous","class2"]=c("Same P level\nas field")
+tmp[tmp$class=="different_phosphorous","class2"]=c("Different P level\nfrom field")
+ggplot(tmp,aes(class2,beta_bray))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(width=0.05,size=3,alpha=0.8,shape=17)+theme_classic(base_size=22)+guides(color=F)+xlab("")+ylab("Bray-Curtis dissimilarity\nfrom inoculum to sample")

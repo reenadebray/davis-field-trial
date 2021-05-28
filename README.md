@@ -18,8 +18,8 @@ Implementation of DADA2 ITS pipeline and removal of non-fungal eukaryotic sequen
 ### ITS_sequence_filtering.md
 Describes how to use ITSx to classify ITS sequences as fungal or non-fungal.
 ### Field_trial_analysis.R
-All code used to calculate diversity and composition metrics and perform statistical tests in the field trial data..
+All code used to calculate diversity and compositional metrics in the field trial data..
 ### Growth_chamber_experiments.R
-All code used to calculate diversity, composition, and disease metrics and perform statistical tests in the growth chamber experiments.
+All code used to calculate diversity and compositional metrics in the growth chamber experiments.
 ### Figures.R
 Code used to generate all figures in the manuscript.

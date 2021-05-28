@@ -108,3 +108,63 @@ indic_asvs<-indic_asvs[order(indic_asvs$treatment,indic_asvs$stat),]
 indic_asvs$Family_ASV<-factor(indic_asvs$Family_ASV,levels=indic_asvs[indic_asvs$treatment=="water","Family_ASV"])
 ggplot(indic_asvs,aes(stat,Family_ASV,fill=(stat<0)))+geom_bar(stat="identity",position="dodge")+theme_classic(base_size=24)+xlab("Indicator value")+ylab("")+guides(fill=F)+scale_fill_manual(values=c("#FCD225FF","#39568CFF"))+facet_wrap(~treatment2)+ theme(panel.spacing = unit(2.5, "lines"),axis.text.y=element_text(size=16),axis.title.x= element_text(margin = margin(t = 30, r = 0, b = 0, l = 0)))+geom_text(aes(stat+0.1*multiplier,Family_ASV,label=label),size=7)
 
+### Figure 4: Cross-kingdom associations
+# Figure 4A: Richness correlation
+ggplot(ITS_16S_df,aes(bac_richness,fungal_richness))+stat_smooth(method="lm",se=F,linetype="dashed",color="firebrick2",size=1.5)+geom_point(size=2.5,alpha=0.8)+theme_classic(base_size=20)+xlab("Bacterial species richness")+ylab("Fungal species richness")
+
+# Figure 4B: Co-occurrence networks
+FW_76R_graph<-nw_list[[4]]
+E(FW_76R_graph)$weight<-1
+coords<-layout_with_fr(FW_76R_graph)
+kingdom<-substr(vertex.attributes(FW_76R_graph)$name,1,1)
+kingdom_col<-c()
+kingdom_col[kingdom=="B"]="dodgerblue"
+kingdom_col[kingdom=="F"]="gold"
+plot.igraph(FW_76R_graph,vertex.size=3,vertex.label=NA,vertex.color=kingdom_col,layout=coords)
+
+FW_rmc_graph<-nw_list[[1]]
+E(FW_rmc_graph)$weight<-1
+coords<-layout_with_fr(FW_rmc_graph)
+kingdom<-substr(vertex.attributes(FW_rmc_graph)$name,1,1)
+kingdom_col<-c()
+kingdom_col[kingdom=="B"]="dodgerblue"
+kingdom_col[kingdom=="F"]="gold"
+plot.igraph(FW_rmc_graph,vertex.size=3,vertex.label=NA,vertex.color=kingdom_col,layout=coords)
+
+D_76R_graph<-nw_list[[2]]
+E(D_76R_graph)$weight<-1
+coords<-layout_with_fr(D_76R_graph)
+kingdom<-substr(vertex.attributes(D_76R_graph)$name,1,1)
+kingdom_col<-c()
+kingdom_col[kingdom=="B"]="dodgerblue"
+kingdom_col[kingdom=="F"]="gold"
+plot.igraph(D_76R_graph,vertex.size=3,vertex.label=NA,vertex.color=kingdom_col,layout=coords)
+
+D_rmc_graph<-nw_list[[3]]
+E(D_rmc_graph)$weight<-1
+coords<-layout_with_fr(D_rmc_graph)
+kingdom<-substr(vertex.attributes(D_rmc_graph)$name,1,1)
+kingdom_col<-c()
+kingdom_col[kingdom=="B"]="dodgerblue"
+kingdom_col[kingdom=="F"]="gold"
+plot.igraph(D_rmc_graph,vertex.size=3,vertex.label=NA,vertex.color=kingdom_col,layout=coords)
+
+# Figure 4C: Network edge metrics
+nw_sums[nw_sums$treatment=="drought 76R","treatment2"]="Wild-type 76R\nWater deficit"
+nw_sums[nw_sums$treatment=="drought rmc","treatment2"]="Reduced mycorrhizal\nWater deficit"
+nw_sums[nw_sums$treatment=="full water 76R","treatment2"]="Wild-type 76R\nFull water"
+nw_sums[nw_sums$treatment=="full water rmc","treatment2"]="Reduced mycorrhizal\nFull water"
+
+nw_sums$treatment2<-factor(nw_sums$treatment2,levels=rev(c("Wild-type 76R\nFull water","Reduced mycorrhizal\nFull water","Wild-type 76R\nWater deficit","Reduced mycorrhizal\nWater deficit")))
+
+ggplot(nw_sums)+geom_point(aes(num_edges,treatment2),size=4,shape=23,fill="black")+theme_classic(base_size=24)+geom_point(aes(bac_edges,treatment2),fill="blue",size=4,shape=23)+geom_point(aes(fun_edges,treatment2),fill="gold",size=4,shape=23)+geom_point(aes(BF_edges,treatment2),fill="forestgreen",size=4,shape=23)+xlab("Number of network edges")+ylab("")
+
+# Figure 4D: Network node metrics
+node_sums[node_sums$treatment=="drought 76R","treatment2"]="Wild-type 76R\nWater deficit"
+node_sums[node_sums$treatment=="drought rmc","treatment2"]="Reduced mycorrhizal\nWater deficit"
+node_sums[node_sums$treatment=="full water 76R","treatment2"]="Wild-type 76R\nFull water"
+node_sums[node_sums$treatment=="full water rmc","treatment2"]="Reduced mycorrhizal\nFull water"
+
+node_sums$treatment2<-factor(node_sums$treatment2,levels=rev(c("Wild-type 76R\nFull water","Reduced mycorrhizal\nFull water","Wild-type 76R\nWater deficit","Reduced mycorrhizal\nWater deficit")))
+
+ggplot(node_sums,aes(log(degree_norm),treatment2))+geom_boxplot(width=0.5,size=0.8,outlier.shape=NA)+geom_jitter(height=0.05,width=0.1,size=2,alpha=0.2)+theme_classic(base_size=24)+ylab("")+xlab("Log-scaled normalized degree")+xlim(-7,0)
